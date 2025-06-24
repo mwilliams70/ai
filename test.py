@@ -4,8 +4,10 @@
 
 import openai
 import os
+import json
 
 from google import genai
+
 from google.genai.types import Tool, GenerateContentConfig, GoogleSearch
 from pydantic import BaseModel
 
@@ -19,16 +21,36 @@ def main():
     #     ]
     # )
     # print(response['choices'][0]['message']['content'])
+    class Shoe(BaseModel):
+        shoe_name: str
+        desc: str
+    
     client = genai.Client(api_key="AIzaSyD5bI0i5MlVk-3pUpR2aAoDvHvkNfi6fWg")
+    model_id="gemini-2.5-flash"
+
+    url_context_tool = Tool(
+        url_context = GoogleSearch
+    )
 
     response = client.models.generate_content(
-        model="gemini-2.5-flash",
-        contents="How does AI work?"
+        model=model_id,
+        contents="provide a one to two paragraph description of this https://www.dickssportinggoods.com/p/nike-mens-dunk-low-shoes-24nikmdnklwrtrvrkmns/24nikmdnklwrtrvrkmns?color=White%2FGym%20Red",
+        config={
+            "response_mime_type":"application/json",
+            "response_schema": list[Shoe],
+        },
     )
-    print(response.text)
+    result = json.loads(response.text)
+    shoe = Shoe(**result[0])
+
+    print("Shoe Name: ", shoe.shoe_name)
+    print("Description: ", shoe.desc)
 
 if __name__ == "__main__":
     main()
+
+
+
 
 
 
